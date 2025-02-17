@@ -7,26 +7,29 @@ function App() {
   const [movies, setMovies] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
 
-  const APi_URL = 'https://www.omdbapi.com/?apikey=7a2fbed8';
+  const API_URL = 'https://www.omdbapi.com/?apikey=7a2fbed8';
 
-  const movie = {
-    "Title": "Batman Begins",
-    "Year": "2005",
-    "imdbID": "tt0372784",
-    "Type": 'movie',
-    "Poster": 'N/A',
-  };
-
-  const searchmovies = async (title) => {
-    const response = await fetch(`${APi_URL}&s=${title}`);
-    const data = await response.json();
-
-    setMovies(data.Search);
+  const searchMovies = async (title) => {
+    try {
+      const response = await fetch(`${API_URL}&s=${title}`);
+      const data = await response.json();
+      // Check if data.Search exists and is an array
+      setMovies(data.Search || []);
+    } catch (error) {
+      console.error('Error fetching movies:', error);
+      setMovies([]);
+    }
   };
 
   useEffect(() => {
-    searchmovies('Batman');
+    searchMovies('Batman');
   }, []);
+
+  const handleKeyPress = (event) => {
+    if (event.key === 'Enter') {
+      searchMovies(searchTerm);
+    }
+  };
 
   return (
     <div className="App">
@@ -37,14 +40,22 @@ function App() {
           placeholder="Search for a movie"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
+          onKeyPress={handleKeyPress} // Added Enter key support
         />
-        <img src={SearchIcon} alt="search" onClick={() => searchmovies(searchTerm)} />
+        <img 
+          src={SearchIcon} 
+          alt="search" 
+          onClick={() => searchMovies(searchTerm)} 
+        />
       </div>
 
-      {movies.length > 0 ? (
+      {movies?.length > 0 ? (
         <div className="container">
           {movies.map((movie) => (
-            <Cards movie={movie}/>
+            <Cards 
+              key={movie.imdbID} // Added unique key prop
+              movie={movie}
+            />
           ))}
         </div>
       ) : (
@@ -53,7 +64,6 @@ function App() {
         </div>
       )}
     </div>
-    
   );
 }
 
